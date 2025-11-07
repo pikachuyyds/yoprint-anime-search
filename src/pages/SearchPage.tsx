@@ -57,6 +57,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (query.trim() === "") {
+      dispatch(clearError());
       abortControllerRef.current?.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;

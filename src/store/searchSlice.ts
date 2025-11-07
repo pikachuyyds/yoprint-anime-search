@@ -140,7 +140,11 @@ const searchSlice = createSlice({
       })
       .addCase(fetchAnimeResults.rejected, (state) => {
         state.loading = false;
-        state.error = "Failed to fetch anime.";
+        if (state.query.trim() !== "") {
+          state.error = "Failed to fetch anime.";
+        } else {
+          state.error = null; // don't show error for empty query
+        }
       });
     builder
       .addCase(fetchAnimeDetails.pending, (state) => {
