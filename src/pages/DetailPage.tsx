@@ -1,8 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
-import { fetchAnimeDetails } from "../store/searchSlice";
+import {
+  fetchAnimeDetails,
+  clearSelectedAnime,
+  clearError,
+} from "../store/searchSlice";
+import { FaStar } from "react-icons/fa";
 
 export default function DetailPage() {
   const { id } = useParams();
@@ -14,27 +19,21 @@ export default function DetailPage() {
   const isDark = mode === "dark";
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const fetchDetails = () => {
-      if (!id) return;
-
-      // Abort previous request if still running
-      abortControllerRef.current?.abort();
-
-      const newController = new AbortController();
-      abortControllerRef.current = newController;
-
-      dispatch(fetchAnimeDetails({ id, controller: newController }));
-    };
-
-    fetchDetails(); // initial fetch
+    // Clear previous selected anime & error
+    dispatch(clearError());
+    dispatch(clearSelectedAnime());
+    dispatch(fetchAnimeDetails({ id, controller }));
 
     const handleReconnect = () => {
-      fetchDetails();
+      dispatch(fetchAnimeDetails({ id, controller: new AbortController() }));
     };
 
     window.addEventListener("online", handleReconnect);
@@ -45,7 +44,20 @@ export default function DetailPage() {
     };
   }, [id, dispatch]);
 
-  if (loading && !selectedAnime) {
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        if (error && !selectedAnime) {
+          setShowError(true);
+        }
+      }, 500); // delay 500ms before showing error
+      return () => clearTimeout(timer);
+    } else {
+      setShowError(false); // hide error while loading
+    }
+  }, [loading, error, selectedAnime]);
+
+  if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex flex-col md:flex-row gap-8">
@@ -81,7 +93,7 @@ export default function DetailPage() {
     );
   }
 
-  if (error && !selectedAnime) {
+  if (showError) {
     return (
       <div className="max-w-5xl mx-auto p-6 text-center space-y-4">
         <h2
@@ -109,6 +121,7 @@ export default function DetailPage() {
       </div>
     );
   }
+
   const anime = selectedAnime;
   if (!anime) {
     return null;
@@ -166,8 +179,10 @@ export default function DetailPage() {
               <span className="font-semibold">Studio:</span>{" "}
               {anime.studios?.[0]?.name || "-"}
             </p>
-            <p>
-              <span className="font-semibold">Score:</span> ⭐ {anime.score}
+            <p className="flex items-center gap-1">
+              <span className="font-semibold">Score:</span>
+              <FaStar className="text-yellow-400" size={14} />
+              <span>{anime.score}</span>
             </p>
           </div>
 

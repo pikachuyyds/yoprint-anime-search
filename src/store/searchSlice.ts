@@ -11,6 +11,11 @@ type SearchState = {
   loading: boolean;
   error: string | null;
   selectedAnime?: Anime | null;
+  filters: {
+    type: string | null;
+    status: string | null;
+    rating: number | null;
+  };
 };
 
 const initialState: SearchState = {
@@ -22,6 +27,7 @@ const initialState: SearchState = {
   loading: false,
   error: null,
   selectedAnime: null,
+  filters: { type: null, status: null, rating: null },
 };
 
 export const fetchAnimeResults = createAsyncThunk(
@@ -30,13 +36,30 @@ export const fetchAnimeResults = createAsyncThunk(
     query,
     page,
     controller,
+    filters,
   }: {
     query: string;
     page: number;
     controller: AbortController;
+    filters: {
+      status: string | null;
+      rating: number | null;
+      type: string | null;
+    };
   }) => {
     try {
-      const response = await searchAnime(query, page, controller.signal);
+      const params = {
+        type: filters.type ?? undefined,
+        status: filters.status ?? undefined,
+        rating: filters.rating ?? undefined,
+      };
+
+      const response = await searchAnime(
+        query,
+        page,
+        controller.signal,
+        params
+      );
       return response;
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -87,6 +110,21 @@ const searchSlice = createSlice({
     setPage(state, action) {
       state.page = action.payload;
     },
+    setTypeFilter(state, action) {
+      state.filters.type = action.payload;
+    },
+    setStatusFilter(state, action) {
+      state.filters.status = action.payload;
+    },
+    setRatingFilter(state, action) {
+      state.filters.rating = action.payload;
+    },
+    clearSelectedAnime(state) {
+      state.selectedAnime = null;
+    },
+    clearError(state) {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -107,12 +145,13 @@ const searchSlice = createSlice({
     builder
       .addCase(fetchAnimeDetails.pending, (state) => {
         state.loading = true;
-        state.selectedAnime = null;
+        state.error = null;
       })
       .addCase(fetchAnimeDetails.fulfilled, (state, action) => {
         if (!action.payload) return;
         state.loading = false;
         state.selectedAnime = action.payload;
+        state.error = null;
       })
       .addCase(fetchAnimeDetails.rejected, (state) => {
         state.loading = false;
@@ -135,5 +174,13 @@ const searchSlice = createSlice({
   },
 });
 
-export const { setQuery, setPage } = searchSlice.actions;
+export const {
+  setQuery,
+  setPage,
+  setTypeFilter,
+  setStatusFilter,
+  setRatingFilter,
+  clearSelectedAnime,
+  clearError,
+} = searchSlice.actions;
 export default searchSlice.reducer;
