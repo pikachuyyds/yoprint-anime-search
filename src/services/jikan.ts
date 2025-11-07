@@ -12,11 +12,21 @@ export const searchAnime = async (
     params: { q: query, page, limit: 10 },
     signal,
   });
-  console.log("API Response:", response.data);
   return response.data;
 };
 
-export const fetchAnimeById = async (id: string) => {
-  const response = await axios.get(`${API_BASE}/anime/${id}/full`);
+export const fetchAnimeById = async (id: string, signal?: AbortSignal) => {
+  const response = await axios.get(`${API_BASE}/anime/${id}/full`, { signal });
+  console.log(response.data.data);
   return response.data.data;
+};
+
+export const fetchTopAnime = async (
+  signal?: AbortSignal
+): Promise<AnimeSearchResponse> => {
+  const response = await axios.get(`${API_BASE}/top/anime`, {
+    params: { limit: 10 },
+    signal,
+  });
+  return response.data;
 };

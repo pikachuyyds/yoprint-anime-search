@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { searchAnime, fetchAnimeById } from "../services/jikan";
+import { searchAnime, fetchAnimeById, fetchTopAnime } from "../services/jikan";
 import type { Anime } from "../types/anime";
 
 type SearchState = {
   query: string;
   page: number;
   results: Anime[];
+  topResults: Anime[];
   totalPages: number;
   loading: boolean;
   error: string | null;
@@ -16,6 +17,7 @@ const initialState: SearchState = {
   query: "",
   page: 1,
   results: [],
+  topResults: [],
   totalPages: 1,
   loading: false,
   error: null,
@@ -33,16 +35,39 @@ export const fetchAnimeResults = createAsyncThunk(
     page: number;
     controller: AbortController;
   }) => {
-    const response = await searchAnime(query, page, controller.signal);
-    return response;
+    try {
+      const response = await searchAnime(query, page, controller.signal);
+      return response;
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      throw err;
+    }
   }
 );
 
 export const fetchAnimeDetails = createAsyncThunk(
   "search/fetchAnimeDetails",
-  async (id: string) => {
-    const response = await fetchAnimeById(id);
-    return response;
+  async ({ id, controller }: { id: string; controller?: AbortController }) => {
+    try {
+      const response = await fetchAnimeById(id, controller?.signal);
+      return response;
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      throw err;
+    }
+  }
+);
+
+export const fetchTopAnimeList = createAsyncThunk(
+  "search/fetchTopAnimeList",
+  async (controller?: AbortController) => {
+    try {
+      const response = await fetchTopAnime(controller?.signal);
+      return response;
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      throw err;
+    }
   }
 );
 
@@ -52,7 +77,12 @@ const searchSlice = createSlice({
   reducers: {
     setQuery(state, action) {
       state.query = action.payload;
-      state.page = 1; // reset to page 1 when new search term entered
+      state.page = 1;
+
+      if (action.payload.trim() === "") {
+        state.results = [];
+        state.totalPages = 1;
+      }
     },
     setPage(state, action) {
       state.page = action.payload;
@@ -65,6 +95,7 @@ const searchSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAnimeResults.fulfilled, (state, action) => {
+        if (!action.payload) return;
         state.loading = false;
         state.results = action.payload.data;
         state.totalPages = action.payload.pagination.last_visible_page;
@@ -76,14 +107,30 @@ const searchSlice = createSlice({
     builder
       .addCase(fetchAnimeDetails.pending, (state) => {
         state.loading = true;
+        state.selectedAnime = null;
       })
       .addCase(fetchAnimeDetails.fulfilled, (state, action) => {
+        if (!action.payload) return;
         state.loading = false;
         state.selectedAnime = action.payload;
       })
       .addCase(fetchAnimeDetails.rejected, (state) => {
         state.loading = false;
         state.error = "Failed to fetch anime details.";
+        state.selectedAnime = null;
+      });
+    builder
+      .addCase(fetchTopAnimeList.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchTopAnimeList.fulfilled, (state, action) => {
+        if (!action.payload) return;
+        state.loading = false;
+        state.topResults = action.payload.data;
+      })
+      .addCase(fetchTopAnimeList.rejected, (state) => {
+        state.loading = false;
+        state.error = "Failed to fetch top anime.";
       });
   },
 });

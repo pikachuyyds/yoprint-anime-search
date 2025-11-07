@@ -21,7 +21,7 @@ function App() {
         <label className="text-sm">Theme:</label>
         <button
           onClick={() => dispatch(toggleMode())}
-          className={`px-4 py-2 rounded-lg font-medium border transition-colors duration-200 shadow-sm
+          className={`px-4 py-2 rounded-lg font-medium border transition-colors duration-200 shadow-sm cursor-pointer
             ${
               isDark
                 ? "bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500"

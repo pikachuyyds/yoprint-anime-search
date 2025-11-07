@@ -1,5 +1,3 @@
-import React from "react";
-
 type Props = {
   page: number;
   totalPages: number;
@@ -14,21 +12,28 @@ export default function Pagination({
   isDark,
 }: Props) {
   const maxButtons = 5;
-  const start = Math.max(
-    Math.min(page - Math.floor(maxButtons / 2), totalPages - maxButtons),
-    1
-  );
-  const end = Math.min(start + maxButtons - 1, totalPages);
+  const half = Math.floor(maxButtons / 2);
+
+  let start = Math.max(1, page - half);
+  let end = Math.min(totalPages, page + half);
+
+  if (end - start < maxButtons - 1) {
+    if (page <= half) {
+      end = Math.min(totalPages, start + maxButtons - 1);
+    } else {
+      start = Math.max(1, end - maxButtons + 1);
+    }
+  }
 
   const pages = [];
   for (let i = start; i <= end; i++) pages.push(i);
 
   const baseButton =
-    "px-3 py-1 rounded-lg border font-medium transition-colors duration-200 shadow-sm";
+    "px-3 py-1 rounded-lg border font-medium transition-colors duration-200 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50";
 
   return (
-    <div className="flex justify-center mt-10">
-      <ul className="flex items-center gap-2">
+    <div className="flex justify-center mt-10 px-2">
+      <ul className="flex flex-wrap items-center gap-2 justify-center">
         {/* Prev */}
         <li>
           <button
@@ -39,12 +44,15 @@ export default function Pagination({
                 ? "opacity-40 cursor-not-allowed"
                 : isDark
                 ? "bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500"
-                : "bg-white text-gray-900 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
+                : "bg-slate-100 text-gray-900 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
             }`}
           >
             Prev
           </button>
         </li>
+
+        {/* Left Ellipsis */}
+        {start > 1 && <span className="px-2 text-gray-500">…</span>}
 
         {/* Page Numbers */}
         {pages.map((p) => (
@@ -60,8 +68,8 @@ export default function Pagination({
                     } hover:bg-gray-700`
                   : `border-gray-300 ${
                       p === page
-                        ? "bg-gray-300 text-gray-900"
-                        : "bg-white text-gray-900"
+                        ? "bg-gray-200 text-gray-900"
+                        : "bg-slate-100 text-gray-900"
                     } hover:bg-gray-100`
               }`}
             >
@@ -69,6 +77,9 @@ export default function Pagination({
             </button>
           </li>
         ))}
+
+        {/* Right Ellipsis */}
+        {end < totalPages && <span className="px-2 text-gray-500">…</span>}
 
         {/* Next */}
         <li>
@@ -80,7 +91,7 @@ export default function Pagination({
                 ? "opacity-40 cursor-not-allowed"
                 : isDark
                 ? "bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500"
-                : "bg-white text-gray-900 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
+                : "bg-slate-100 text-gray-900 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
             }`}
           >
             Next
