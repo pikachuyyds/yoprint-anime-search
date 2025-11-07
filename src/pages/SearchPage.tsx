@@ -57,7 +57,11 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (query.trim() === "") {
-      dispatch(fetchTopAnimeList());
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      dispatch(fetchTopAnimeList(controller));
     }
   }, [query, dispatch]);
 

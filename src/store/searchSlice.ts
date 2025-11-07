@@ -14,7 +14,7 @@ type SearchState = {
   filters: {
     type: string | null;
     status: string | null;
-    rating: number | null;
+    rating: string | null;
   };
 };
 
@@ -42,9 +42,9 @@ export const fetchAnimeResults = createAsyncThunk(
     page: number;
     controller: AbortController;
     filters: {
-      status: string | null;
-      rating: number | null;
       type: string | null;
+      status: string | null;
+      rating: string | null;
     };
   }) => {
     try {

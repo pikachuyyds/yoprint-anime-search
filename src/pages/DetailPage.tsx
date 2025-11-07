@@ -212,6 +212,7 @@ export default function DetailPage() {
               className="w-full h-full rounded-lg shadow-lg"
               allowFullScreen
               loading="lazy"
+              rel="noopener noreferrer"
             />
           </div>
         </div>

@@ -20,3 +20,19 @@ _(Add your deployed URL here once hosted)_
 - Navigation via `react-router-dom`
 - State management handled via Redux
 - Fully typed with TypeScript
+
+### User Experience Enhancements
+
+- Skeleton loaders for both search results and detail pages
+- Error handling with retry on network reconnection
+- Empty state messaging for no results or errors
+- Responsive grid layout for mobile, tablet, and desktop
+- Dark mode support (adapts based on theme state)
+
+### Bonus Implementation
+
+- Filters for Type, Status, and Rating on the search page
+- Trailer embedded in the anime detail page
+- Related anime links (prequel, sequel, adaptations)
+- Smooth scrolling to top when changing pages
+- Hover effects on anime cards for improved visual feedback

@@ -10,7 +10,7 @@ export const searchAnime = async (
   params?: {
     type?: string | null;
     status?: string | null;
-    rating?: number | null;
+    rating?: string | null;
   }
 ): Promise<AnimeSearchResponse> => {
   const response = await axios.get(`${API_BASE}/anime`, {
