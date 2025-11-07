@@ -1,15 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { searchAnime } from "../services/jikan";
+import { searchAnime, fetchAnimeById } from "../services/jikan";
 import type { Anime } from "../types/anime";
 
-interface SearchState {
+type SearchState = {
   query: string;
   page: number;
   results: Anime[];
   totalPages: number;
   loading: boolean;
   error: string | null;
-}
+  selectedAnime?: Anime | null;
+};
 
 const initialState: SearchState = {
   query: "",
@@ -18,6 +19,7 @@ const initialState: SearchState = {
   totalPages: 1,
   loading: false,
   error: null,
+  selectedAnime: null,
 };
 
 export const fetchAnimeResults = createAsyncThunk(
@@ -32,6 +34,14 @@ export const fetchAnimeResults = createAsyncThunk(
     controller: AbortController;
   }) => {
     const response = await searchAnime(query, page, controller.signal);
+    return response;
+  }
+);
+
+export const fetchAnimeDetails = createAsyncThunk(
+  "search/fetchAnimeDetails",
+  async (id: string) => {
+    const response = await fetchAnimeById(id);
     return response;
   }
 );
@@ -62,6 +72,18 @@ const searchSlice = createSlice({
       .addCase(fetchAnimeResults.rejected, (state) => {
         state.loading = false;
         state.error = "Failed to fetch anime.";
+      });
+    builder
+      .addCase(fetchAnimeDetails.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAnimeDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedAnime = action.payload;
+      })
+      .addCase(fetchAnimeDetails.rejected, (state) => {
+        state.loading = false;
+        state.error = "Failed to fetch anime details.";
       });
   },
 });
