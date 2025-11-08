@@ -25,10 +25,23 @@ export default function DetailPage() {
   useEffect(() => {
     let errorTimer: ReturnType<typeof setTimeout> | undefined;
     let skeletonTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
     if (loadingDetail) {
       setShowSkeleton(true);
       setShowError(false);
+    } else if (errorDetail?.includes("429") && id) {
+      // rate limit error
+      setShowSkeleton(false);
+      setShowError(true);
+      //auto-retry after 1s
+      retryTimer = setTimeout(() => {
+        if (id) {
+          const controller = new AbortController();
+          abortControllerRef.current = controller;
+          dispatch(fetchAnimeDetails({ id, controller }));
+        }
+      }, 1000);
     } else if (!selectedAnime && errorDetail) {
       // delay error only if fetch finished and there is no data
       errorTimer = setTimeout(() => setShowError(true), 1000);
@@ -43,8 +56,9 @@ export default function DetailPage() {
     return () => {
       clearTimeout(errorTimer);
       clearTimeout(skeletonTimer);
+      clearTimeout(retryTimer);
     };
-  }, [loadingDetail, selectedAnime, errorDetail]);
+  }, [loadingDetail, selectedAnime, errorDetail, id, dispatch]);
 
   useEffect(() => {
     if (!id) return;
