@@ -66,13 +66,15 @@ export default function DetailPage() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
+    dispatch(clearSelectedAnime());
+
     if (!navigator.onLine) {
-      clearSelectedAnime();
       dispatch(setErrorDetail("Network is offline."));
     } else {
       dispatch(fetchAnimeDetails({ id, controller }));
     }
     const handleReconnect = () => {
+      dispatch(clearSelectedAnime());
       dispatch(fetchAnimeDetails({ id, controller: new AbortController() }));
     };
 

@@ -41,13 +41,15 @@ export default function SearchPage() {
     let errorTimer: ReturnType<typeof setTimeout> | undefined;
     if (loadingSearch || loadingTop) {
       setShowError(false);
-    } else if (query.trim() !== "" && results.length === 0) {
+    } else if (query.trim() !== "" && (results.length === 0 || errorSearch)) {
       // delay error rendering to show skeleton first
       errorTimer = setTimeout(() => {
         if (!loadingSearch && !loadingTop) {
           setShowError(true);
         }
       }, 400);
+    } else if (errorTop) {
+      errorTimer = setTimeout(() => setShowError(true), 400);
     } else {
       // dont show error when back from detail page
       setShowError(false);
@@ -55,7 +57,7 @@ export default function SearchPage() {
     return () => {
       clearTimeout(errorTimer);
     };
-  }, [loadingSearch, loadingTop, query, results]);
+  }, [loadingSearch, loadingTop, query, results, errorSearch, errorTop]);
 
   useEffect(() => {
     if (!debouncedQuery) return;
@@ -287,20 +289,37 @@ export default function SearchPage() {
         </div>
       )}
 
+      {!loadingTop && showError && errorTop && query.trim() === "" && (
+        <div className="text-center mt-10 opacity-80">
+          <p
+            className={`text-lg font-medium ${
+              isDark ? "text-red-400" : "text-red-600"
+            }`}
+          >
+            {errorTop}
+          </p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+            Unable to load trending anime. Please check your network and try
+            again.
+          </p>
+        </div>
+      )}
+
       {!loadingSearch &&
-        !loadingTop &&
         showError &&
-        (errorTop || errorSearch) && (
+        errorSearch &&
+        errorSearch !== "canceled" &&
+        query.trim() !== "" && (
           <div className="text-center mt-10 opacity-80">
             <p
               className={`text-lg font-medium ${
                 isDark ? "text-red-400" : "text-red-600"
               }`}
             >
-              {errorTop || errorSearch}
+              {errorSearch}
             </p>
             <p className={isDark ? "text-gray-400" : "text-gray-600"}>
-              Please try again or wait a moment.
+              Please check your network or wait a moment.
             </p>
           </div>
         )}
@@ -308,7 +327,8 @@ export default function SearchPage() {
       {!loadingSearch &&
         query.trim() !== "" &&
         results.length === 0 &&
-        showError && (
+        showError &&
+        !errorSearch && (
           <div className="text-center mt-10 opacity-80">
             <p
               className={`text-lg font-medium ${

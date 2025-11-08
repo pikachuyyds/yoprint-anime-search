@@ -161,6 +161,7 @@ const searchSlice = createSlice({
         state.loadingSearch = true;
         state.errorSearch = null;
         state.errorTop = null;
+        state.results = [];
       })
       .addCase(fetchAnimeResults.fulfilled, (state, action) => {
         if (!action.payload) return;
@@ -179,6 +180,7 @@ const searchSlice = createSlice({
       })
       .addCase(fetchAnimeResults.rejected, (state, action) => {
         state.loadingSearch = false;
+        state.results = [];
         if ((action.error.message ?? "") !== "Fetch aborted") {
           state.errorSearch =
             action.error.message ?? "Failed to fetch anime. Please try again.";
