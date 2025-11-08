@@ -122,11 +122,11 @@ export default function DetailPage() {
 
   if (showError) {
     return (
-      <div className="max-w-5xl mx-auto p-6 text-center space-y-4">
+      <div className="mt-10 max-w-5xl mx-auto p-6 text-center space-y-4">
         <h2
           className={`${
             isDark ? "text-gray-200" : "text-gray-700"
-          } text-xl font-semibold`}
+          } text-lg md:text-xl font-semibold`}
         >
           {errorDetail ?? "Anime not found."}
         </h2>
@@ -159,7 +159,7 @@ export default function DetailPage() {
       {/* Back */}
       <Link to="/">
         <button
-          className={`mb-3 px-3 py-1 rounded-lg border font-medium transition-colors duration-200 shadow-sm cursor-pointer
+          className={`mb-3 px-3 py-1 rounded-lg border font-medium transition-colors duration-200 shadow-sm cursor-pointer text-sm md:text-xl
             ${
               isDark
                 ? "bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500"
@@ -183,12 +183,12 @@ export default function DetailPage() {
 
         {/* Details */}
         <div className="flex-1 space-y-3">
-          <h1 className="text-4xl font-bold">{anime.title}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold">{anime.title}</h1>
 
           <div
             className={`${
               isDark ? "text-gray-300" : "text-gray-700"
-            } text-sm space-y-1`}
+            } text-sm md:text-xl space-y-1`}
           >
             <p>
               <span className="font-semibold">Type:</span> {anime.type}
@@ -219,7 +219,7 @@ export default function DetailPage() {
               {anime.genres.map((g) => (
                 <span
                   key={g.mal_id}
-                  className="px-3 py-1 text-xs rounded-full border border-blue-400/40 bg-blue-400/10"
+                  className="px-3 py-1 text-xs md:text-lg rounded-full border border-blue-400/40 bg-blue-400/10"
                 >
                   {g.name}
                 </span>
@@ -232,23 +232,40 @@ export default function DetailPage() {
       {/* Trailer */}
       {anime.trailer?.embed_url && (
         <div className="mt-10">
-          <h2 className="text-2xl font-semibold mb-3">Trailer</h2>
-          <div className="aspect-video w-full max-w-3xl">
-            <iframe
-              src={anime.trailer.embed_url}
-              className="w-full h-full rounded-lg shadow-lg"
-              allowFullScreen
-              loading="lazy"
-              rel="noopener noreferrer"
-            />
+          <h2
+            className={`text-2xl font-semibold mb-3 ${
+              isDark ? "text-gray-200" : "text-gray-700"
+            }`}
+          >
+            Trailer
+          </h2>
+          <div className="mt-5 flex justify-center">
+            <div className="aspect-video w-full max-w-3xl">
+              <iframe
+                src={anime.trailer.embed_url}
+                className="w-full h-full rounded-lg shadow-lg"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
       )}
 
       {/* Synopsis */}
       <div>
-        <h2 className="text-2xl font-semibold mb-3">Synopsis</h2>
-        <p className="text-gray-300 leading-relaxed">
+        <h2
+          className={`text-2xl font-semibold mb-3 ${
+            isDark ? "text-gray-200" : "text-gray-700"
+          }`}
+        >
+          Synopsis
+        </h2>
+        <p
+          className={`leading-relaxed text-sm md:text-xl ${
+            isDark ? "text-gray-300" : "text-gray-800"
+          }`}
+        >
           {anime.synopsis || "No synopsis available."}
         </p>
       </div>
@@ -256,8 +273,18 @@ export default function DetailPage() {
       {/* Relations (Prequel / Adaptation) */}
       {anime.relations && anime.relations?.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-3">Related</h2>
-          <div className="space-y-2 text-sm text-gray-300">
+          <h2
+            className={`text-2xl font-semibold mb-3 ${
+              isDark ? "text-gray-200" : "text-gray-700"
+            }`}
+          >
+            Related
+          </h2>
+          <div
+            className={`space-y-2 text-md md:text-xl ${
+              isDark ? "text-gray-300" : "text-gray-800"
+            }`}
+          >
             {anime.relations.map((rel, idx) => (
               <div key={idx}>
                 <span className="font-semibold">{rel.relation}:</span>{" "}

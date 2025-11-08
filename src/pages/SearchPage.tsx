@@ -175,7 +175,11 @@ export default function SearchPage() {
               <span className="ml-1 relative group">
                 <CiCircleQuestion
                   size={16}
-                  className="cursor-pointer text-gray-400 hover:text-gray-600"
+                  className={`cursor-pointer ${
+                    isDark
+                      ? "text-slate-200 hover:text-gray-300"
+                      : "text-gray-700 hover:text-gray-900"
+                  }`}
                 />
                 <div
                   className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-md p-2 text-xs text-white bg-gray-800 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50`}

@@ -17,8 +17,8 @@ function App() {
         isDark ? "bg-gray-900 text-white" : "bg-slate-200 text-gray-900"
       } min-h-screen p-4`}
     >
-      <div className="flex gap-3 mb-6 items-center">
-        <label className="text-sm">Theme:</label>
+      <div className="flex gap-3 mb-6 pl-6 items-center">
+        <label className="text-md">Theme:</label>
         <button
           onClick={() => dispatch(toggleMode())}
           className={`px-4 py-2 rounded-lg font-medium border transition-colors duration-200 shadow-sm cursor-pointer
