@@ -10,13 +10,13 @@ https://yoprint-anime-search.vercel.app
 
 1. Clone the repository:
    ```powershell
-   git clone <repo-url>
+   git clone https://github.com/pikachuyyds/yoprint-anime-search.git
    cd <project-folder>
    ```
 2. Install dependencies:
-   npm install
+   `npm install`
 3. Start development:
-   npm run dev
+   `npm run dev`
 4. Open http://localhost:4000/ in your browser
 
 ## Tech Stack
