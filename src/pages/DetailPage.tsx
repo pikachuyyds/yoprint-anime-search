@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
-import { fetchAnimeDetails } from "../store/searchSlice";
+import {
+  fetchAnimeDetails,
+  setErrorDetail,
+  clearSelectedAnime,
+} from "../store/searchSlice";
 import { FaStar } from "react-icons/fa";
 
 export default function DetailPage() {
@@ -16,6 +20,31 @@ export default function DetailPage() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const [showError, setShowError] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(false);
+
+  useEffect(() => {
+    let errorTimer: ReturnType<typeof setTimeout> | undefined;
+    let skeletonTimer: ReturnType<typeof setTimeout> | undefined;
+
+    if (loadingDetail) {
+      setShowSkeleton(true);
+      setShowError(false);
+    } else if (!selectedAnime && errorDetail) {
+      // delay error only if fetch finished and there is no data
+      errorTimer = setTimeout(() => setShowError(true), 1000);
+      // ensure skeleton shows at least briefly
+      skeletonTimer = setTimeout(() => setShowSkeleton(false), 800);
+    } else {
+      // data exists, no error
+      setShowSkeleton(false);
+      setShowError(false);
+    }
+
+    return () => {
+      clearTimeout(errorTimer);
+      clearTimeout(skeletonTimer);
+    };
+  }, [loadingDetail, selectedAnime, errorDetail]);
 
   useEffect(() => {
     if (!id) return;
@@ -23,9 +52,12 @@ export default function DetailPage() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // Clear previous selected anime & error
-    dispatch(fetchAnimeDetails({ id, controller }));
-
+    if (!navigator.onLine) {
+      clearSelectedAnime();
+      dispatch(setErrorDetail("Network is offline."));
+    } else {
+      dispatch(fetchAnimeDetails({ id, controller }));
+    }
     const handleReconnect = () => {
       dispatch(fetchAnimeDetails({ id, controller: new AbortController() }));
     };
@@ -38,20 +70,7 @@ export default function DetailPage() {
     };
   }, [id, dispatch]);
 
-  useEffect(() => {
-    if (!loadingDetail) {
-      const timer = setTimeout(() => {
-        if (errorDetail && !selectedAnime) {
-          setShowError(true);
-        }
-      }, 2000); // delay 2s before showing error
-      return () => clearTimeout(timer);
-    } else {
-      setShowError(false); // hide error while loading
-    }
-  }, [loadingDetail, errorDetail, selectedAnime]);
-
-  if (loadingDetail) {
+  if (showSkeleton) {
     return (
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex flex-col md:flex-row gap-8">

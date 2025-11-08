@@ -148,19 +148,34 @@ const searchSlice = createSlice({
     setRatingFilter(state, action) {
       state.filters.rating = action.payload;
     },
+    setErrorDetail(state, action: { payload: string }) {
+      state.errorDetail = action.payload;
+    },
+    clearSelectedAnime(state) {
+      state.selectedAnime = null;
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAnimeResults.pending, (state) => {
         state.loadingSearch = true;
         state.errorSearch = null;
+        state.errorTop = null;
       })
       .addCase(fetchAnimeResults.fulfilled, (state, action) => {
         if (!action.payload) return;
         state.loadingSearch = false;
         state.errorSearch = null;
-        state.results = action.payload.data;
-        state.totalPages = action.payload.pagination.last_visible_page;
+        state.errorTop = null;
+        state.results = action.payload.data ?? [];
+        if (
+          action.payload.pagination &&
+          typeof action.payload.pagination.last_visible_page === "number"
+        ) {
+          state.totalPages = action.payload.pagination.last_visible_page;
+        } else {
+          state.totalPages = 1;
+        }
       })
       .addCase(fetchAnimeResults.rejected, (state, action) => {
         state.loadingSearch = false;
@@ -192,9 +207,11 @@ const searchSlice = createSlice({
       .addCase(fetchTopAnimeList.pending, (state) => {
         state.loadingTop = true;
         state.errorTop = null;
+        state.errorSearch = null;
       })
       .addCase(fetchTopAnimeList.fulfilled, (state, action) => {
         if (!action.payload) return;
+        state.errorSearch = null;
         state.errorTop = null;
         state.loadingTop = false;
         state.topResults = action.payload.data;
@@ -214,5 +231,7 @@ export const {
   setTypeFilter,
   setStatusFilter,
   setRatingFilter,
+  setErrorDetail,
+  clearSelectedAnime,
 } = searchSlice.actions;
 export default searchSlice.reducer;

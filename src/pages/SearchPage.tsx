@@ -10,7 +10,7 @@ import {
   setTypeFilter,
 } from "../store/searchSlice";
 import useDebounce from "../hooks/useDebounce";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import { CiCircleQuestion } from "react-icons/ci";
@@ -27,6 +27,7 @@ export default function SearchPage() {
     errorSearch,
     loadingTop,
     loadingSearch,
+    filters,
   } = useSelector((state: RootState) => state.search);
 
   const debouncedQuery = useDebounce(query, 250);
@@ -34,13 +35,27 @@ export default function SearchPage() {
 
   const mode = useSelector((state: RootState) => state.theme.mode);
   const isDark = mode === "dark";
-
-  const { filters } = useSelector((state: RootState) => state.search);
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    dispatch(setPage(1));
-    dispatch(setQuery(""));
-  }, [dispatch]);
+    let errorTimer: ReturnType<typeof setTimeout> | undefined;
+    if (loadingSearch || loadingTop) {
+      setShowError(false);
+    } else if (query.trim() !== "" && results.length === 0) {
+      // delay error rendering to show skeleton first
+      errorTimer = setTimeout(() => {
+        if (!loadingSearch && !loadingTop) {
+          setShowError(true);
+        }
+      }, 400);
+    } else {
+      // dont show error when back from detail page
+      setShowError(false);
+    }
+    return () => {
+      clearTimeout(errorTimer);
+    };
+  }, [loadingSearch, loadingTop, query, results]);
 
   useEffect(() => {
     if (!debouncedQuery) return;
@@ -209,7 +224,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {(loadingTop || loadingSearch) && (
+      {(loadingSearch || loadingTop) && (
         <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mt-10">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
@@ -268,8 +283,10 @@ export default function SearchPage() {
         </div>
       )}
 
-      {(!loadingTop && !loadingSearch && errorTop) ||
-        (errorSearch && (
+      {!loadingSearch &&
+        !loadingTop &&
+        showError &&
+        (errorTop || errorSearch) && (
           <div className="text-center mt-10 opacity-80">
             <p
               className={`text-lg font-medium ${
@@ -282,12 +299,12 @@ export default function SearchPage() {
               Please try again or wait a moment.
             </p>
           </div>
-        ))}
+        )}
 
       {!loadingSearch &&
-        !errorSearch &&
         query.trim() !== "" &&
-        results.length === 0 && (
+        results.length === 0 &&
+        showError && (
           <div className="text-center mt-10 opacity-80">
             <p
               className={`text-lg font-medium ${
