@@ -4,9 +4,7 @@ A responsive React application that allows users to search for anime and view de
 
 ## Live Demo
 
-_(Add your deployed URL here once hosted)_
-
----
+https://yoprint-anime-search-lyymnkusq-teohoiyi1124-gmailcoms-projects.vercel.app
 
 ## Features
 
@@ -31,6 +29,7 @@ _(Add your deployed URL here once hosted)_
 
 ### Bonus Implementation
 
+- Trending / Top Anime display when no search query is entered
 - Filters for Type, Status, and Rating on the search page
 - Trailer embedded in the anime detail page
 - Related anime links (prequel, sequel, adaptations)

@@ -8,8 +8,12 @@ type SearchState = {
   results: Anime[];
   topResults: Anime[];
   totalPages: number;
-  loading: boolean;
-  error: string | null;
+  loadingSearch: boolean;
+  loadingTop: boolean;
+  loadingDetail: boolean;
+  errorSearch: string | null;
+  errorTop: string | null;
+  errorDetail: string | null;
   selectedAnime?: Anime | null;
   filters: {
     type: string | null;
@@ -24,8 +28,12 @@ const initialState: SearchState = {
   results: [],
   topResults: [],
   totalPages: 1,
-  loading: false,
-  error: null,
+  loadingSearch: false,
+  loadingTop: false,
+  loadingDetail: false,
+  errorSearch: null,
+  errorTop: null,
+  errorDetail: null,
   selectedAnime: null,
   filters: { type: null, status: null, rating: null },
 };
@@ -62,7 +70,13 @@ export const fetchAnimeResults = createAsyncThunk(
       );
       return response;
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error("Fetch aborted");
+      }
+      // Check for network offline error
+      if (err instanceof TypeError && !navigator.onLine) {
+        throw new Error("Network is offline. Please check your connection.");
+      }
       throw err;
     }
   }
@@ -75,7 +89,13 @@ export const fetchAnimeDetails = createAsyncThunk(
       const response = await fetchAnimeById(id, controller?.signal);
       return response;
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error("Fetch aborted");
+      }
+      // Check for network offline error
+      if (err instanceof TypeError && !navigator.onLine) {
+        throw new Error("Network is offline. Please check your connection.");
+      }
       throw err;
     }
   }
@@ -88,7 +108,13 @@ export const fetchTopAnimeList = createAsyncThunk(
       const response = await fetchTopAnime(controller?.signal);
       return response;
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error("Fetch aborted");
+      }
+      // Check for network offline error
+      if (err instanceof TypeError && !navigator.onLine) {
+        throw new Error("Network is offline. Please check your connection.");
+      }
       throw err;
     }
   }
@@ -105,6 +131,9 @@ const searchSlice = createSlice({
       if (action.payload.trim() === "") {
         state.results = [];
         state.totalPages = 1;
+        state.errorSearch = null;
+        state.loadingSearch = false;
+        state.selectedAnime = null;
       }
     },
     setPage(state, action) {
@@ -119,61 +148,62 @@ const searchSlice = createSlice({
     setRatingFilter(state, action) {
       state.filters.rating = action.payload;
     },
-    clearSelectedAnime(state) {
-      state.selectedAnime = null;
-    },
-    clearError(state) {
-      state.error = null;
-    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAnimeResults.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.loadingSearch = true;
+        state.errorSearch = null;
       })
       .addCase(fetchAnimeResults.fulfilled, (state, action) => {
         if (!action.payload) return;
-        state.loading = false;
+        state.loadingSearch = false;
+        state.errorSearch = null;
         state.results = action.payload.data;
         state.totalPages = action.payload.pagination.last_visible_page;
       })
-      .addCase(fetchAnimeResults.rejected, (state) => {
-        state.loading = false;
-        if (state.query.trim() !== "") {
-          state.error = "Failed to fetch anime.";
-        } else {
-          state.error = null; // don't show error for empty query
+      .addCase(fetchAnimeResults.rejected, (state, action) => {
+        state.loadingSearch = false;
+        if ((action.error.message ?? "") !== "Fetch aborted") {
+          state.errorSearch =
+            action.error.message ?? "Failed to fetch anime. Please try again.";
         }
       });
     builder
       .addCase(fetchAnimeDetails.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.loadingDetail = true;
+        state.errorDetail = null;
+        state.selectedAnime = null;
       })
       .addCase(fetchAnimeDetails.fulfilled, (state, action) => {
         if (!action.payload) return;
-        state.loading = false;
+        state.loadingDetail = false;
+        state.errorDetail = null;
         state.selectedAnime = action.payload;
-        state.error = null;
       })
-      .addCase(fetchAnimeDetails.rejected, (state) => {
-        state.loading = false;
-        state.error = "Failed to fetch anime details.";
-        state.selectedAnime = null;
+      .addCase(fetchAnimeDetails.rejected, (state, action) => {
+        state.loadingDetail = false;
+        if ((action.error.message ?? "") !== "Fetch aborted") {
+          state.errorDetail =
+            action.error.message ?? "Failed to fetch anime details.";
+        }
       });
     builder
       .addCase(fetchTopAnimeList.pending, (state) => {
-        state.loading = true;
+        state.loadingTop = true;
+        state.errorTop = null;
       })
       .addCase(fetchTopAnimeList.fulfilled, (state, action) => {
         if (!action.payload) return;
-        state.loading = false;
+        state.errorTop = null;
+        state.loadingTop = false;
         state.topResults = action.payload.data;
       })
-      .addCase(fetchTopAnimeList.rejected, (state) => {
-        state.loading = false;
-        state.error = "Failed to fetch top anime.";
+      .addCase(fetchTopAnimeList.rejected, (state, action) => {
+        state.loadingTop = false;
+        if ((action.error.message ?? "") !== "Fetch aborted") {
+          state.errorTop = action.error.message ?? "Failed to fetch top anime.";
+        }
       });
   },
 });
@@ -184,7 +214,5 @@ export const {
   setTypeFilter,
   setStatusFilter,
   setRatingFilter,
-  clearSelectedAnime,
-  clearError,
 } = searchSlice.actions;
 export default searchSlice.reducer;

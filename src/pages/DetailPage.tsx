@@ -2,17 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
-import {
-  fetchAnimeDetails,
-  clearSelectedAnime,
-  clearError,
-} from "../store/searchSlice";
+import { fetchAnimeDetails } from "../store/searchSlice";
 import { FaStar } from "react-icons/fa";
 
 export default function DetailPage() {
   const { id } = useParams();
   const dispatch = useDispatch<AppDispatch>();
-  const { selectedAnime, error, loading } = useSelector(
+  const { selectedAnime, errorDetail, loadingDetail } = useSelector(
     (state: RootState) => state.search
   );
   const mode = useSelector((state: RootState) => state.theme.mode);
@@ -28,8 +24,6 @@ export default function DetailPage() {
     abortControllerRef.current = controller;
 
     // Clear previous selected anime & error
-    dispatch(clearError());
-    dispatch(clearSelectedAnime());
     dispatch(fetchAnimeDetails({ id, controller }));
 
     const handleReconnect = () => {
@@ -45,19 +39,19 @@ export default function DetailPage() {
   }, [id, dispatch]);
 
   useEffect(() => {
-    if (!loading) {
+    if (!loadingDetail) {
       const timer = setTimeout(() => {
-        if (error && !selectedAnime) {
+        if (errorDetail && !selectedAnime) {
           setShowError(true);
         }
-      }, 500); // delay 500ms before showing error
+      }, 2000); // delay 2s before showing error
       return () => clearTimeout(timer);
     } else {
       setShowError(false); // hide error while loading
     }
-  }, [loading, error, selectedAnime]);
+  }, [loadingDetail, errorDetail, selectedAnime]);
 
-  if (loading) {
+  if (loadingDetail) {
     return (
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex flex-col md:flex-row gap-8">
@@ -101,7 +95,7 @@ export default function DetailPage() {
             isDark ? "text-gray-200" : "text-gray-700"
           } text-xl font-semibold`}
         >
-          {error ?? "Anime not found."}
+          {errorDetail ?? "Anime not found."}
         </h2>
         <p className={isDark ? "text-gray-400" : "text-gray-600"}>
           Please try again or return to search.

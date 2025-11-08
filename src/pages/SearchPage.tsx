@@ -8,8 +8,6 @@ import {
   setStatusFilter,
   setRatingFilter,
   setTypeFilter,
-  clearSelectedAnime,
-  clearError,
 } from "../store/searchSlice";
 import useDebounce from "../hooks/useDebounce";
 import { useEffect, useRef } from "react";
@@ -19,8 +17,17 @@ import { CiCircleQuestion } from "react-icons/ci";
 
 export default function SearchPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { query, page, results, topResults, totalPages, error, loading } =
-    useSelector((state: RootState) => state.search);
+  const {
+    query,
+    page,
+    results,
+    topResults,
+    totalPages,
+    errorTop,
+    errorSearch,
+    loadingTop,
+    loadingSearch,
+  } = useSelector((state: RootState) => state.search);
 
   const debouncedQuery = useDebounce(query, 250);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -31,9 +38,6 @@ export default function SearchPage() {
   const { filters } = useSelector((state: RootState) => state.search);
 
   useEffect(() => {
-    // Clear previous error and results on mount
-    dispatch(clearError());
-    dispatch(clearSelectedAnime());
     dispatch(setPage(1));
     dispatch(setQuery(""));
   }, [dispatch]);
@@ -57,7 +61,6 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (query.trim() === "") {
-      dispatch(clearError());
       abortControllerRef.current?.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -206,7 +209,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {loading && (
+      {(loadingTop || loadingSearch) && (
         <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mt-10">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
@@ -226,7 +229,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!loading && query.trim() === "" && topResults.length > 0 && (
+      {!loadingTop && query.trim() === "" && topResults.length > 0 && (
         <div className="max-w-5xl mx-auto">
           <h2
             className={`text-xl font-semibold mt-10 mb-4 ${
@@ -265,34 +268,38 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!loading && error && (
-        <div className="text-center mt-10 opacity-80">
-          <p
-            className={`text-lg font-medium ${
-              isDark ? "text-red-400" : "text-red-600"
-            }`}
-          >
-            {error}
-          </p>
-          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
-            Please try again or wait a moment.
-          </p>
-        </div>
-      )}
+      {(!loadingTop && !loadingSearch && errorTop) ||
+        (errorSearch && (
+          <div className="text-center mt-10 opacity-80">
+            <p
+              className={`text-lg font-medium ${
+                isDark ? "text-red-400" : "text-red-600"
+              }`}
+            >
+              {errorTop || errorSearch}
+            </p>
+            <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+              Please try again or wait a moment.
+            </p>
+          </div>
+        ))}
 
-      {!loading && !error && query.trim() !== "" && results.length === 0 && (
-        <div className="text-center mt-10 opacity-80">
-          <p
-            className={`text-lg font-medium ${
-              isDark ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            No anime found. Try another search.
-          </p>
-        </div>
-      )}
+      {!loadingSearch &&
+        !errorSearch &&
+        query.trim() !== "" &&
+        results.length === 0 && (
+          <div className="text-center mt-10 opacity-80">
+            <p
+              className={`text-lg font-medium ${
+                isDark ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              No anime found. Try another search.
+            </p>
+          </div>
+        )}
 
-      {!loading && results.length > 0 && (
+      {!loadingSearch && results.length > 0 && (
         <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mt-10">
           {results.map((anime) => (
             <Link
@@ -323,14 +330,15 @@ export default function SearchPage() {
       )}
 
       {/* Pagination */}
-      {!loading && results.length > 0 && totalPages > 1 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={(p) => dispatch(setPage(p))}
-          isDark={isDark}
-        />
-      )}
+      {!loadingTop ||
+        (!loadingSearch && results.length > 0 && totalPages > 1 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => dispatch(setPage(p))}
+            isDark={isDark}
+          />
+        ))}
     </div>
   );
 }
