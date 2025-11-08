@@ -4,7 +4,7 @@ A responsive React application that allows users to search for anime and view de
 
 ## Live Demo
 
-https://yoprint-anime-search-lyymnkusq-teohoiyi1124-gmailcoms-projects.vercel.app
+https://yoprint-anime-search.vercel.app
 
 ## Getting Started
 
