@@ -330,15 +330,17 @@ export default function SearchPage() {
       )}
 
       {/* Pagination */}
-      {!loadingTop ||
-        (!loadingSearch && results.length > 0 && totalPages > 1 && (
+      {!loadingTop &&
+        !loadingSearch &&
+        results.length > 0 &&
+        totalPages > 1 && (
           <Pagination
             page={page}
             totalPages={totalPages}
             onPageChange={(p) => dispatch(setPage(p))}
             isDark={isDark}
           />
-        ))}
+        )}
     </div>
   );
 }
